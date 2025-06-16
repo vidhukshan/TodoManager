@@ -26,35 +26,48 @@ struct TodoItem {
 
 var todos: [TodoItem] = []
 
+func displayTask(_ todo: TodoItem) {
+    print("\(todo.id). [\(todo.isComplete ? "✓" : " ")] \(todo.title)")
+}
+
 while true {
     print("\nTodo Manager")
     print("1. Add Task")
     print("2. List Tasks")
     print("3. Delete Task")
     print("4. Mark Task as Complete")
-    print("5. Exit")
+    print("5. Search Task by Title")
+    print("6. Filter tasks by Completion")
+    print("7. Exit")
     print("Choose an option: ")
 
 
     if let input = readLine(), let choice = Int(input) {
         switch choice {
         case 1:
-            //Add task 
-            print("Enter task title: ")
-            if let title = readLine() {
-                let newId = todos.count + 1
-                todos.append(TodoItem(id: newId, title: title, isComplete: false))
-                print("Task Added")
+            //Add multiple tasks until user types 'end'
+            print("Enter tasks one by one. Type 'end' when you are done. ")
+            while true {
+                if let title = readLine() {
+                    if title.lowercased() == "end" {
+                        break
+                    }
+                    if !title.isEmpty {
+                        let newId = todos.isEmpty ? 1 : (todos.last!.id + 1)
+                        todos.append(TodoItem(id: newId, title: title, isComplete: false))
+                        print("Task Added!")
+                    }
+                }
             }
         case 2:
             //List tasks
             for todo in todos {
-                print("\(todo.id). [\(todo.isComplete ? "✓" : " ")] \(todo.title)")
+                displayTask(todo)
             }
         case 3:
             // Show all tasks so the user knows which to delete
             for todo in todos {
-                print("\(todo.id). [\(todo.isComplete ? "✓" : " ")] \(todo.title)")
+                displayTask(todo)
             }
             print("Enter the ID of the task to delete: ")
             if let input = readLine(), let idToDelete = Int(input) {
@@ -71,7 +84,7 @@ while true {
         case 4:
             // Show all tasks so the user knows which to mark as complete
             for todo in todos {
-                print("\(todo.id). [\(todo.isComplete ? "✓" : " ")] \(todo.title)")
+                displayTask(todo)
             }
             print("Enter the ID of the task to mark it as complete")
             if let input = readLine(), let idToMark = Int(input) {
@@ -86,6 +99,40 @@ while true {
                 print("Invalid Input")
             }
         case 5:
+            // Search tasks by Title
+            print("Enter search term: ")
+            if let searchTerm = readLine(), !searchTerm.isEmpty {
+                let results = todos.filter { $0.title.lowercased().contains(searchTerm.lowercased()) }
+                if results.isEmpty {
+                    print("No tasks found with '\(searchTerm)'")
+                } else {
+                    print("Search results: ")
+                    results.forEach(displayTask)
+                }
+            } else {
+                print("Invalid search term")
+            }
+        case 6:
+            //Filter tasks by completion
+            print("Show: 1.Completed 2.Incomplete")
+            if let filterChoice = readLine(), let filter = Int(filterChoice) {
+                let filteredTasks: [TodoItem]
+                switch filter {
+                case 1:
+                    filteredTasks = todos.filter { $0.isComplete }
+                    print("Completed Tasks: ")
+                case 2:
+                    filteredTasks = todos.filter { !$0.isComplete }
+                    print("Incompleted Tasks: ")
+                default:
+                    filteredTasks = []
+                    print("Invalid choice")
+                }
+                filteredTasks.forEach(displayTask)
+            } else {
+                print("Invalid input")
+            }
+        case 7:
             print("Goodbye")
             exit(0)
         default:
