@@ -18,7 +18,7 @@
 
 import Foundation
 
-struct TodoItem {
+struct TodoItem: Codable {
     var id: Int
     var title: String
     var isComplete: Bool
@@ -26,9 +26,42 @@ struct TodoItem {
 
 var todos: [TodoItem] = []
 
+//Define the path for ou JSON File
+let fileURL = URL(fileURLWithPath: "todos.json")
+
+//Functions to save tasks to the file
+@MainActor
+func saveTasks() {
+    do {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted // Makes the JSON File human readable
+        let data = try encoder.encode(todos)
+        try data.write(to: fileURL, options: .atomic)
+    } catch {
+        print("Error saving tasks: \(error.localizedDescription)")
+    }
+}
+
+//Functions to load tasks from the file
+@MainActor
+func loadTasks() {
+    do {
+        let data = try Data(contentsOf: fileURL)
+        let decoder = JSONDecoder()
+        todos = try decoder.decode([TodoItem].self, from: data)
+    } catch {
+        // If the file doesn't exist or there's an error, just start with an empty list.
+        // This is expected on the first run.
+        print("No saved tasks found. Starting fresh.")
+    }
+}
+
 func displayTask(_ todo: TodoItem) {
     print("\(todo.id). [\(todo.isComplete ? "✓" : " ")] \(todo.title)")
 }
+
+//Load existing tasks form the file when the app launches
+loadTasks()
 
 while true {
     print("\nTodo Manager")
@@ -59,6 +92,7 @@ while true {
                     }
                 }
             }
+            saveTasks()
         case 2:
             //List tasks
             for todo in todos {
@@ -75,6 +109,7 @@ while true {
                 if let index = todos.firstIndex(where: { $0.id == idToDelete }) {
                     todos.remove(at: index)
                     print("Task deleted!!!")
+                    saveTasks()
                 } else {
                     print("Task with ID \(idToDelete) not found !")
                 }
@@ -92,6 +127,7 @@ while true {
                 if let index = todos.firstIndex(where: { $0.id == idToMark }) {
                     todos[index].isComplete = true
                     print("Task marked as completed!")
+                    saveTasks()
                 } else {
                     print("Task with ID \(idToMark) not found !")
                 }
